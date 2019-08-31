@@ -2,7 +2,7 @@ bl_info = {
     "name": "EasyFX",
     "description": "Do post-production in the Image Editor",
     "author": "Nils Soderman (rymdnisse) & DoubleZ (2.8 port)",
-    "version": (1, 0, 0),
+    "version": (1, 1, 0),
     "blender": (2, 80, 0),
     "location": "UV/Image Editor > Properties Shelf (N)",
     "warning": "",
@@ -238,7 +238,7 @@ class EASYFX_PT_FilterPanel(Panel):
         row.prop(mytool, "use_glow", text="Glow")
         if mytool.use_glow == True:
             row = col.row(align = True)
-            row.prop(mytool, "glow_em", text="Emission only")
+            row.prop(mytool, "glow_em", text="Emission only (Cycles only)")
             row = col.row(align = True)
             row.prop(mytool, "glow_v", text="Threshold")
         col = layout.column(align=True)
@@ -246,7 +246,7 @@ class EASYFX_PT_FilterPanel(Panel):
         row.prop(mytool, "use_streaks", text="Streaks")
         if mytool.use_streaks == True:
             row = col.row(align = True)
-            row.prop(mytool, "streaks_em", text="Emission only")
+            row.prop(mytool, "streaks_em", text="Emission only (Cycles only)")
             row = col.row(align = True)
             row.prop(mytool, "streaks_v", text="Threshold")
             row = col.row(align = True)
@@ -277,8 +277,8 @@ class EASYFX_PT_BlurPanel(Panel):
         layout.prop(mytool, "use_dof", text="Depth of field")
         if mytool.use_dof == True:
             layout.prop(mytool, "dof_v", text="F-stop")
-            layout.label("Focal point can be set in Camera Properties")
-        layout.prop(mytool, "use_speedb", text="Motion blur")
+            layout.label(text = "Focal point can be set in Camera Properties")
+        layout.prop(mytool, "use_speedb", text="Motion blur (Cycles only)")
         if mytool.use_speedb == True:
             layout.prop(mytool, "motionb_v", text="Amount")
             
@@ -586,11 +586,11 @@ class EASYFX_OT_UpdateOperator(bpy.types.Operator):
             pos_x=pos_x+200
             links.new(latest_node.outputs[0], node_VecBlur.inputs[0])
             latest_node = node_VecBlur
-            if scene.render.layers[layeri].use_pass_z == True and scene.render.layers[layeri].use_pass_vector == True:
+            if scene.view_layers[layeri].use_pass_z == True and scene.view_layers[layeri].use_pass_vector == True:
                 pass
             else:
-                scene.render.layers[layeri].use_pass_z = True
-                scene.render.layers[layeri].use_pass_vector = True
+                scene.view_layers[layeri].use_pass_z = True
+                scene.view_layers[layeri].use_pass_vector = True
                 self.report({'INFO'}, "Re-render Required")
         else:
             try:
@@ -615,10 +615,10 @@ class EASYFX_OT_UpdateOperator(bpy.types.Operator):
             bpy.data.cameras[0].show_limits = True
             links.new(latest_node.outputs[0], node_dof.inputs[0])
             latest_node = node_dof
-            if scene.render.layers[layeri].use_pass_z == True:
+            if scene.view_layers[layeri].use_pass_z == True:
                 pass
             else:
-                scene.render.layers[layeri].use_pass_z = True
+                scene.view_layers[layeri].use_pass_z = True
                 self.report({'INFO'}, "Re-render Required")
         else:
             try:
@@ -703,13 +703,13 @@ class EASYFX_OT_UpdateOperator(bpy.types.Operator):
             if ef.mist_sky == False:
                 ef_use_sky = False
                 try:
-                    sky_layer = scene.render.layers['EasyFX - Sky']
+                    sky_layer = scene.view_layers['EasyFX - Sky']
                 except:
                     sky_layer = bpy.ops.scene.render_layer_add()
                     try:
                         layx = 0
                         while True:
-                            sky_layer = bpy.context.scene.render.layers[layx]
+                            sky_layer = bpy.context.scene.view_layers[layx]
                             layx = layx+1
                     except:
                         sky_layer.name = 'EasyFX - Sky'
@@ -771,8 +771,8 @@ class EASYFX_OT_UpdateOperator(bpy.types.Operator):
             node_streaks.angle_offset = ef.streaks_d
 
             if ef.streaks_em == True:
-                if scene.render.layers[layeri].use_pass_emit == False:
-                    scene.render.layers[layeri].use_pass_emit = True
+                if scene.view_layers[layeri].use_pass_emit == False:
+                    scene.view_layers[layeri].use_pass_emit = True
                     self.report({'INFO'}, "Re-render Required")
                 links.new(CIn.outputs[17], node_streaks.inputs[0])
                 try:
@@ -815,8 +815,8 @@ class EASYFX_OT_UpdateOperator(bpy.types.Operator):
                 node_glow.label = 'Glow'
             node_glow.threshold = ef.glow_v
             if ef.glow_em == True:
-                if scene.render.layers[layeri].use_pass_emit == False:
-                    scene.render.layers[layeri].use_pass_emit = True
+                if scene.view_layers[layeri].use_pass_emit == False:
+                    scene.view_layers[layeri].use_pass_emit = True
                     self.report({'INFO'}, "Re-render Required")
                 links.new(CIn.outputs[17], node_glow.inputs[0])
                 try:
@@ -924,7 +924,7 @@ class EASYFX_OT_UpdateOperator(bpy.types.Operator):
                     try:
                         layx = 0
                         while True:
-                            flare_layer = bpy.context.scene.render.layers[layx]
+                            flare_layer = bpy.context.scene.view_layers[layx]
                             layx = layx+1
                     except:
                         flare_layer.name = 'EasyFX - Flare'
@@ -1380,17 +1380,11 @@ class EASYFX_OT_UpdateOperator(bpy.types.Operator):
         
         # Transoarent Sky
         if ef_use_sky == False and s_sky == False:
-            if bpy.context.scene.render.engine == 'BLENDER_RENDER' or bpy.context.scene.render.engine == 'BLENDER_GAME':
-                scene.render.layers[layeri].use_sky = False
-            else:
-                bpy.context.scene.cycles.film_transparent = True
+            bpy.context.scene.render.film_transparent = True
             s_sky = True
             self.report({'INFO'}, "Re-render Required")
         elif ef_use_sky == True and s_sky == True:
-            if bpy.context.scene.render.engine == 'BLENDER_RENDER' or bpy.context.scene.render.engine == 'BLENDER_GAME':
-                scene.render.layers[layeri].use_sky = True
-            else:
-                bpy.context.scene.cycles.film_transparent = False
+            bpy.context.scene.render.film_transparent = False
             s_sky = False
             self.report({'INFO'}, "Re-render Required")
         return {'FINISHED'}
