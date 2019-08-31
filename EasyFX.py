@@ -2,7 +2,7 @@ bl_info = {
     "name": "EasyFX",
     "description": "Do post-production in the Image Editor",
     "author": "Nils Soderman (rymdnisse) & DoubleZ (2.8 port)",
-    "version": (1, 1, 0),
+    "version": (1, 1, 1),
     "blender": (2, 80, 0),
     "location": "UV/Image Editor > Properties Shelf (N)",
     "warning": "",
@@ -479,8 +479,7 @@ class EASYFX_OT_UpdateOperator(bpy.types.Operator):
         ef = bpy.context.scene.easyfx
         # Layer Index
         layeri = ef.layer_index
-        #layern = bpy.data.scenes['Scene'].render.layers[layeri].name
-        layern = bpy.data.scenes['Scene'].view_layers[layeri].name
+        layern = bpy.context.scene.view_layers[layeri].name
         try:
             nodes.remove(nodes['Render Layers'])
             nodes.remove(nodes['Composite'])
@@ -918,7 +917,7 @@ class EASYFX_OT_UpdateOperator(bpy.types.Operator):
                     mat.emit = 5
                     bpy.context.object.data.materials.append(mat)
                 try:
-                    flare_layer = bpy.data.scenes['Scene'].render.layers['EasyFX - Flare']
+                    flare_layer = bpy.context.scene.render.layers['EasyFX - Flare']
                 except:
                     flare_layer = bpy.ops.scene.render_layer_add()
                     try:
@@ -1383,7 +1382,7 @@ class EASYFX_OT_UpdateOperator(bpy.types.Operator):
             bpy.context.scene.render.film_transparent = True
             s_sky = True
             self.report({'INFO'}, "Re-render Required")
-        elif ef_use_sky == True and s_sky == True:
+        elif ef_use_sky == True and s_sky == True:  
             bpy.context.scene.render.film_transparent = False
             s_sky = False
             self.report({'INFO'}, "Re-render Required")
