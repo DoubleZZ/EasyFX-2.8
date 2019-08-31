@@ -1,10 +1,10 @@
 bl_info = {
     "name": "EasyFX",
     "description": "Do post-production in the Image Editor",
-    "author": "Nils Soderman (rymdnisse)",
+    "author": "Nils Soderman (rymdnisse) & DoubleZ (2.8 port)",
     "version": (1, 0, 0),
-    "blender": (2, 75, 0),
-    "location": "UV/Image Editor > Tool Shelf",
+    "blender": (2, 80, 0),
+    "location": "UV/Image Editor > Properties Shelf (N)",
     "warning": "",
     "wiki_url": "",
     "tracker_url": "",
@@ -26,6 +26,9 @@ from bpy.types import (Panel,
                        AddonPreferences,
                        PropertyGroup,
                        )
+
+from bpy.utils import register_class, unregister_class
+
 # ------------------------------------------------------------------------
 #    variables
 # ------------------------------------------------------------------------
@@ -51,151 +54,151 @@ def Auto_Update(self, context):
 class MySettings(PropertyGroup):
 
     # Nodes
-    use_auto_update = BoolProperty(
+    use_auto_update : BoolProperty(
         name="Auto Update",
         description="Automatically update when a value is altered",
         default = True, update=Auto_Update)
     # Filters
-    use_vignette = BoolProperty(
+    use_vignette : BoolProperty(
         name="Vignette",
         description="Gradual decrease in light intensity towards the image borders",
         default = False, update=Auto_Update)
-    vignette_v = FloatProperty(name="Viggnette Amount",description="Amount", default=70, min=0, max=100, subtype="PERCENTAGE", update=Auto_Update)
-    use_glow = BoolProperty(
+    vignette_v : FloatProperty(name="Viggnette Amount",description="Amount", default=70, min=0, max=100, subtype="PERCENTAGE", update=Auto_Update)
+    use_glow : BoolProperty(
         name="Glow",
         description="Glow",
         default = False, update=Auto_Update)
-    glow_em = BoolProperty(
+    glow_em : BoolProperty(
         name="Only Emission",
         description="Only materials with an emission value will glow",
         default = False, update=Auto_Update)
-    glow_v = FloatProperty(name="Viggnette Amount",description="Amount", default=1, min=0, update=Auto_Update)
-    use_streaks = BoolProperty(
+    glow_v : FloatProperty(name="Viggnette Amount",description="Amount", default=1, min=0, update=Auto_Update)
+    use_streaks : BoolProperty(
         name="Streaks",
         description="Streaks",
         default = False, update=Auto_Update)
-    streaks_em = BoolProperty(
+    streaks_em : BoolProperty(
         name="Only Emission",
         description="Only materials with an emission value will generate streaks",
         default = False, update=Auto_Update)
-    streaks_v = FloatProperty(name="Viggnette Amount",description="Amount", default=1, min=0, update=Auto_Update)
-    streaks_n = IntProperty(name="Number of streaks",description="Number of streaks", default=4,min=2,max=16, update=Auto_Update)
-    streaks_d = FloatProperty(name="Angle Offset",description="Streak angle offset", default=0,min=0, max=math.pi, unit='ROTATION', update=Auto_Update)
-    sharpen_v = FloatProperty(name="Sharpen",description="Sharpen image", default=0,min=0, update=Auto_Update)
-    soften_v = FloatProperty(name="Soften",description="Soften image", default=0,min=0, update=Auto_Update)
+    streaks_v : FloatProperty(name="Viggnette Amount",description="Amount", default=1, min=0, update=Auto_Update)
+    streaks_n : IntProperty(name="Number of streaks",description="Number of streaks", default=4,min=2,max=16, update=Auto_Update)
+    streaks_d : FloatProperty(name="Angle Offset",description="Streak angle offset", default=0,min=0, max=math.pi, unit='ROTATION', update=Auto_Update)
+    sharpen_v : FloatProperty(name="Sharpen",description="Sharpen image", default=0,min=0, update=Auto_Update)
+    soften_v : FloatProperty(name="Soften",description="Soften image", default=0,min=0, update=Auto_Update)
     
     # Blurs
-    use_speedb = BoolProperty(
+    use_speedb : BoolProperty(
         name="Motion Blur",
         description="Blurs out fast motions",
         default = False, update=Auto_Update)
-    motionb_v = FloatProperty(name="Motion blur amount",description="Amount of motion blur", default=1.0, min=0, update=Auto_Update)
-    use_dof = BoolProperty(
+    motionb_v : FloatProperty(name="Motion blur amount",description="Amount of motion blur", default=1.0, min=0, update=Auto_Update)
+    use_dof : BoolProperty(
         name="Depth of field",
         description="Range of distance that appears acceptably sharp",
         default = False, update=Auto_Update)
-    dof_v = FloatProperty(name="Defocus amount",description="Amount of blur", default=50.0, min=0, max=128, update=Auto_Update)
+    dof_v : FloatProperty(name="Defocus amount",description="Amount of blur", default=50.0, min=0, max=128, update=Auto_Update)
     
     
     # Color
-    bw_v = FloatProperty(name="Saturation",description="Saturation", default=1, min=0, max=4, subtype="FACTOR", update=Auto_Update)
-    contrast_v = FloatProperty(name="Contrast",description="The difference in color and light between parts of an image", default=0, update=Auto_Update)
-    brightness_v = FloatProperty(name="Brightness",description="Brightness", default=0, update=Auto_Update)
-    shadows_v = bpy.props.FloatVectorProperty(name="Shadows",description="Shadows", subtype="COLOR_GAMMA",default=(1,1,1),min=0, max=2, update=Auto_Update)
-    midtones_v = bpy.props.FloatVectorProperty(name="Midtones",description="Midtones", subtype="COLOR_GAMMA",default=(1,1,1),min=0, max=2, update=Auto_Update)
-    highlights_v = bpy.props.FloatVectorProperty(name="Highlights",description="Highlights", subtype="COLOR_GAMMA",default=(1,1,1),min=0, max=2, update=Auto_Update)
-    check_v = bpy.props.FloatVectorProperty(default=(1,1,1),subtype="COLOR_GAMMA", update=Auto_Update)
+    bw_v : FloatProperty(name="Saturation",description="Saturation", default=1, min=0, max=4, subtype="FACTOR", update=Auto_Update)
+    contrast_v : FloatProperty(name="Contrast",description="The difference in color and light between parts of an image", default=0, update=Auto_Update)
+    brightness_v : FloatProperty(name="Brightness",description="Brightness", default=0, update=Auto_Update)
+    shadows_v : bpy.props.FloatVectorProperty(name="Shadows",description="Shadows", subtype="COLOR_GAMMA",default=(1,1,1),min=0, max=2, update=Auto_Update)
+    midtones_v : bpy.props.FloatVectorProperty(name="Midtones",description="Midtones", subtype="COLOR_GAMMA",default=(1,1,1),min=0, max=2, update=Auto_Update)
+    highlights_v : bpy.props.FloatVectorProperty(name="Highlights",description="Highlights", subtype="COLOR_GAMMA",default=(1,1,1),min=0, max=2, update=Auto_Update)
+    check_v : bpy.props.FloatVectorProperty(default=(1,1,1),subtype="COLOR_GAMMA", update=Auto_Update)
     
     # Distort / Lens
-    use_flip = BoolProperty(
+    use_flip : BoolProperty(
         name="Flip image",
         description="Flip image on the X axis",
         default = False, update=Auto_Update)
-    lens_distort_v = FloatProperty(name="Distort",description="Distort the lens", default=0, min=-0.999, max=1, update=Auto_Update)
-    dispersion_v = FloatProperty(name="Dispersion",description="A type of distortion in which there is a failure of a lens to focus all colors to the same convergence point", default=0, min=0, max=1, update=Auto_Update)
-    use_flare = BoolProperty(
+    lens_distort_v : FloatProperty(name="Distort",description="Distort the lens", default=0, min=-0.999, max=1, update=Auto_Update)
+    dispersion_v : FloatProperty(name="Dispersion",description="A type of distortion in which there is a failure of a lens to focus all colors to the same convergence point", default=0, min=0, max=1, update=Auto_Update)
+    use_flare : BoolProperty(
         name="Lens Flare",
         description="Lens Flare",
         default = False, update=Auto_Update)
-    flare_type = EnumProperty(items=[('Fixed', 'Fixed', 'Fixed position'), ('Tracked', 'Tracked', 'Select if you want object to place in the viewport to act like the flare')], update=Auto_Update)
-    flare_c = bpy.props.FloatVectorProperty(name="Highlights",description="Flare Color", subtype="COLOR_GAMMA",size=4, default=(1,0.3,0.084, 1),min=0, max=1, update=Auto_Update)    
-    flare_x = FloatProperty(name="Flare X Pos",description="Flare X offset", default=0, update=Auto_Update)
-    flare_y = FloatProperty(name="Flare Y Pos",description="Flare Y offset", default=0, update=Auto_Update)
+    flare_type : EnumProperty(items=[('Fixed', 'Fixed', 'Fixed position'), ('Tracked', 'Tracked', 'Select if you want object to place in the viewport to act like the flare')], update=Auto_Update)
+    flare_c : bpy.props.FloatVectorProperty(name="Highlights",description="Flare Color", subtype="COLOR_GAMMA",size=4, default=(1,0.3,0.084, 1),min=0, max=1, update=Auto_Update)    
+    flare_x : FloatProperty(name="Flare X Pos",description="Flare X offset", default=0, update=Auto_Update)
+    flare_y : FloatProperty(name="Flare Y Pos",description="Flare Y offset", default=0, update=Auto_Update)
     #flare_size = FloatProperty(name="Size",description="Flare Y offset", default=0, update=Auto_Update)
-    flare_streak_intensity = FloatProperty(name="Size",description="Streak Intensity", default=0.002, min=0,max=1, subtype='FACTOR', update=Auto_Update)
-    flare_streak_lenght = FloatProperty(name="Size",description="Streak Lenght", default=1, max=3,min=0.001, subtype='FACTOR', update=Auto_Update)
-    flare_streak_angle = FloatProperty(name="Size",description="Streak Rotatiom", default=0, max=math.pi,min=0, subtype='ANGLE', update=Auto_Update)
-    flare_streak_streaks = IntProperty(name="Size",description="Streak Streaks", default=12, max=16,min=2, update=Auto_Update)
-    flare_glow = FloatProperty(name="Size",description="Glow Intensity", default=0.03, min=0,max=1, subtype='FACTOR', update=Auto_Update)
-    flare_ghost = FloatProperty(name="Size",description="Ghost Intensity", default=1, min=0, update=Auto_Update)
-    flare_layer = bpy.props.BoolVectorProperty(name="test", subtype="LAYER", size=20,update=Auto_Update,default=(False,False,False,False,False,False,False,False,False,False,False,False,False,False,False,True,False,False,False,False))
+    flare_streak_intensity : FloatProperty(name="Size",description="Streak Intensity", default=0.002, min=0,max=1, subtype='FACTOR', update=Auto_Update)
+    flare_streak_lenght : FloatProperty(name="Size",description="Streak Lenght", default=1, max=3,min=0.001, subtype='FACTOR', update=Auto_Update)
+    flare_streak_angle : FloatProperty(name="Size",description="Streak Rotatiom", default=0, max=math.pi,min=0, subtype='ANGLE', update=Auto_Update)
+    flare_streak_streaks : IntProperty(name="Size",description="Streak Streaks", default=12, max=16,min=2, update=Auto_Update)
+    flare_glow : FloatProperty(name="Size",description="Glow Intensity", default=0.03, min=0,max=1, subtype='FACTOR', update=Auto_Update)
+    flare_ghost : FloatProperty(name="Size",description="Ghost Intensity", default=1, min=0, update=Auto_Update)
+    flare_layer : bpy.props.BoolVectorProperty(name="test", subtype="LAYER", size=20,update=Auto_Update,default=(False,False,False,False,False,False,False,False,False,False,False,False,False,False,False,True,False,False,False,False))
     #Tracked
-    flaret_streak_intensity = FloatProperty(name="Size",description="Streak Intensity", default=0.03, min=0,max=1, subtype='FACTOR', update=Auto_Update)
-    flaret_streak_lenght = FloatProperty(name="Size",description="Streak Lenght", default=1.5, max=3,min=0.001, subtype='FACTOR', update=Auto_Update)
-    flaret_streak_angle = FloatProperty(name="Size",description="Streak Rotatiom", default=0, max=math.pi,min=0, subtype='ANGLE', update=Auto_Update)
-    flaret_streak_streaks = IntProperty(name="Size",description="Streak Streaks", default=12, max=16,min=2, update=Auto_Update)
-    flaret_glow = FloatProperty(name="Size",description="Glow Intensity", default=0.1, min=0,max=1, subtype='FACTOR', update=Auto_Update)
-    flaret_ghost = FloatProperty(name="Size",description="Ghost Intensity", default=1.5, min=0, update=Auto_Update)
-    flare_center_size = FloatProperty(name="Size",description="Size of the flare source", default=20, min=1, update=Auto_Update)
+    flaret_streak_intensity : FloatProperty(name="Size",description="Streak Intensity", default=0.03, min=0,max=1, subtype='FACTOR', update=Auto_Update)
+    flaret_streak_lenght : FloatProperty(name="Size",description="Streak Lenght", default=1.5, max=3,min=0.001, subtype='FACTOR', update=Auto_Update)
+    flaret_streak_angle : FloatProperty(name="Size",description="Streak Rotatiom", default=0, max=math.pi,min=0, subtype='ANGLE', update=Auto_Update)
+    flaret_streak_streaks : IntProperty(name="Size",description="Streak Streaks", default=12, max=16,min=2, update=Auto_Update)
+    flaret_glow : FloatProperty(name="Size",description="Glow Intensity", default=0.1, min=0,max=1, subtype='FACTOR', update=Auto_Update)
+    flaret_ghost : FloatProperty(name="Size",description="Ghost Intensity", default=1.5, min=0, update=Auto_Update)
+    flare_center_size : FloatProperty(name="Size",description="Size of the flare source", default=20, min=1, update=Auto_Update)
     
     # World
-    use_mist = BoolProperty(
+    use_mist : BoolProperty(
         name="Use Mist",
         description="Mist",
         default = False, update=Auto_Update)
-    mist_sky = BoolProperty(
+    mist_sky : BoolProperty(
         name="Use Mist",
         description="The mist will affect the sky",
         default = True, update=Auto_Update)
-    mist_offset = FloatProperty(name="Size",description="Offset", default=0, update=Auto_Update)
-    mist_size = FloatProperty(name="Size",description="Amount", default=0.01, update=Auto_Update)
-    mist_min = FloatProperty(name="Size",description="Minimum", default=0, min=0,max=1, update=Auto_Update, subtype="FACTOR")
-    mist_max = FloatProperty(name="Size",description="Maximum", default=1, min=0,max=1, update=Auto_Update, subtype="FACTOR")
-    mist_color = bpy.props.FloatVectorProperty(name="Mist Color",description="Mist Color", subtype="COLOR_GAMMA",size=4, default=(1,1,1,1),min=0, max=1, update=Auto_Update)
+    mist_offset : FloatProperty(name="Size",description="Offset", default=0, update=Auto_Update)
+    mist_size : FloatProperty(name="Size",description="Amount", default=0.01, update=Auto_Update)
+    mist_min : FloatProperty(name="Size",description="Minimum", default=0, min=0,max=1, update=Auto_Update, subtype="FACTOR")
+    mist_max : FloatProperty(name="Size",description="Maximum", default=1, min=0,max=1, update=Auto_Update, subtype="FACTOR")
+    mist_color : bpy.props.FloatVectorProperty(name="Mist Color",description="Mist Color", subtype="COLOR_GAMMA",size=4, default=(1,1,1,1),min=0, max=1, update=Auto_Update)
         
     
     
       
     # Settings
-    use_cinematic_border = BoolProperty(
+    use_cinematic_border : BoolProperty(
         name="Cinematic Border",
         description="Add black borders at top and bottom",
         default = False, update=Auto_Update)
-    cinematic_border_v = FloatProperty(name="Cinematic Border",description="border height", default=0.4, min=0, max=1, update=Auto_Update)
-    use_transparent_sky = BoolProperty(
+    cinematic_border_v : FloatProperty(name="Cinematic Border",description="border height", default=0.4, min=0, max=1, update=Auto_Update)
+    use_transparent_sky : BoolProperty(
         name="Transparent Sky",
         description="Render the sky as transparent",
         default = False, update=Auto_Update)
-    use_cel_shading = BoolProperty(
+    use_cel_shading : BoolProperty(
         name="Cell Shading",
         description="Adds a black outline, mimic the style of a comic book or cartoon",
         default = False, update=Auto_Update)
-    cel_thickness = FloatProperty(name="Cel shading thickness",description="Line thickness", default=1, min=0, subtype='PIXEL', update=Auto_Update)
-    split_image = BoolProperty(
+    cel_thickness : FloatProperty(name="Cel shading thickness",description="Line thickness", default=1, min=0, subtype='PIXEL', update=Auto_Update)
+    split_image : BoolProperty(
         name="Split Original",
         description="Split the image with the original render",
         default = False, update=Auto_Update)
-    split_v = IntProperty(name="Split Value",description="Where to split the image", default=50, min=0, max=100,subtype='PERCENTAGE', update=Auto_Update)
-    use_image_sky = BoolProperty(
+    split_v : IntProperty(name="Split Value",description="Where to split the image", default=50, min=0, max=100,subtype='PERCENTAGE', update=Auto_Update)
+    use_image_sky : BoolProperty(
         name="Image Sky",
         description="Use external image as sky",
         default = False, update=Auto_Update)
-    image_sky_img = StringProperty(name="Sky Image",description="Image", default="",subtype='FILE_PATH', update=Auto_Update)
-    image_sky_x = FloatProperty(name="Image Sky X",description="Image offset on the X axis", default=0, update=Auto_Update)
-    image_sky_y = FloatProperty(name="Image Sky Y",description="Image offset on the Y axis", default=0, update=Auto_Update)
-    image_sky_angle = FloatProperty(name="Image Sky Angle",description="Image Rotation", default=0, update=Auto_Update)
-    image_sky_scale = FloatProperty(name="Image sky Scale",description="Image Scale", default=1, update=Auto_Update)
-    layer_index = IntProperty(name="Layer Index",description="Render Layer to use as main", default=0,min=0, update=Auto_Update)
+    image_sky_img : StringProperty(name="Sky Image",description="Image", default="",subtype='FILE_PATH', update=Auto_Update)
+    image_sky_x : FloatProperty(name="Image Sky X",description="Image offset on the X axis", default=0, update=Auto_Update)
+    image_sky_y : FloatProperty(name="Image Sky Y",description="Image offset on the Y axis", default=0, update=Auto_Update)
+    image_sky_angle : FloatProperty(name="Image Sky Angle",description="Image Rotation", default=0, update=Auto_Update)
+    image_sky_scale : FloatProperty(name="Image sky Scale",description="Image Scale", default=1, update=Auto_Update)
+    layer_index : IntProperty(name="Layer Index",description="Render Layer to use as main", default=0,min=0, update=Auto_Update)
 
 # ------------------------------------------------------------------------
 #    Pannels
 # ------------------------------------------------------------------------
-class UpdatePanel(bpy.types.Panel):
+class EASYFX_PT_UpdatePanel(bpy.types.Panel):
     bl_category = "EasyFX"
     bl_label = "Update"
-    bl_idname = "Update"
+    bl_idname = "EASYFX_PT_Update"
     bl_space_type = 'IMAGE_EDITOR'
-    bl_region_type = 'TOOLS'
+    bl_region_type = 'UI'
     
     def draw(self, context):
         layout = self.layout
@@ -215,12 +218,12 @@ class UpdatePanel(bpy.types.Panel):
         if mytool.split_image == True:
             layout.prop(mytool, "split_v", text="Split at")
         
-class FilterPanel(Panel):
+class EASYFX_PT_FilterPanel(Panel):
     bl_category = "EasyFX"
     bl_label = "Filter"
-    bl_idname = "Filter"
+    bl_idname = "EASYFX_PT_Filter"
     bl_space_type = 'IMAGE_EDITOR'
-    bl_region_type = 'TOOLS'
+    bl_region_type = 'UI'
 
     def draw(self, context):
         # get the scene
@@ -260,12 +263,12 @@ class FilterPanel(Panel):
         row.prop(mytool, "soften_v", text="Soften")
         
 
-class BlurPanel(Panel):
+class EASYFX_PT_BlurPanel(Panel):
     bl_category = "EasyFX"
     bl_label = "Blur"
-    bl_idname = "Blur"
+    bl_idname = "EASYFX_PT_Blur"
     bl_space_type = 'IMAGE_EDITOR'
-    bl_region_type = 'TOOLS'
+    bl_region_type = 'UI'
 
     def draw(self, context):
         scn = context.scene
@@ -280,12 +283,12 @@ class BlurPanel(Panel):
             layout.prop(mytool, "motionb_v", text="Amount")
             
             
-class ColorPanel(Panel):
+class EASYFX_PT_ColorPanel(Panel):
     bl_category = "EasyFX"
     bl_label = "Color"
-    bl_idname = "Color"
+    bl_idname = "EASYFX_PT_Color"
     bl_space_type = 'IMAGE_EDITOR'
-    bl_region_type = 'TOOLS'
+    bl_region_type = 'UI'
 
     def draw(self, context):
         scn = context.scene
@@ -302,12 +305,12 @@ class ColorPanel(Panel):
         layout.prop(mytool, "midtones_v", text="Midtones")
         layout.prop(mytool, "highlights_v", text="Hightlights")
         
-class LensPanel(Panel):
+class EASYFX_PT_LensPanel(Panel):
     bl_category = "EasyFX"
     bl_label = "Lens"
-    bl_idname = "Lens"
+    bl_idname = "EASYFX_PT_Lens"
     bl_space_type = 'IMAGE_EDITOR'
-    bl_region_type = 'TOOLS'
+    bl_region_type = 'UI'
 
     def draw(self, context):
         scn = context.scene
@@ -362,12 +365,12 @@ class LensPanel(Panel):
         
         
         
-class WorldPanel(Panel):
+class EASYFX_PT_WorldPanel(Panel):
     bl_category = "EasyFX"
     bl_label = "World"
-    bl_idname = "World"
+    bl_idname = "EASYFX_PT_World"
     bl_space_type = 'IMAGE_EDITOR'
-    bl_region_type = 'TOOLS'
+    bl_region_type = 'UI'
 
     def draw(self, context):
         scn = context.scene
@@ -402,12 +405,12 @@ class WorldPanel(Panel):
             row = col.row(align = True)
             row.prop(mytool, "image_sky_scale", text="Scale")
             
-class StylePanel(Panel):
+class EASYFX_PT_StylePanel(Panel):
     bl_category = "EasyFX"
     bl_label = "Style"
-    bl_idname = "Style"
+    bl_idname = "EASYFX_PT_Style"
     bl_space_type = 'IMAGE_EDITOR'
-    bl_region_type = 'TOOLS'
+    bl_region_type = 'UI'
 
     def draw(self, context):
         scn = context.scene
@@ -420,19 +423,19 @@ class StylePanel(Panel):
         if mytool.use_cinematic_border == True:
             layout.prop(mytool, "cinematic_border_v", text="Border height")
         
-class SettingPanel(Panel):
+class EASYFX_PT_SettingPanel(Panel):
     bl_category = "EasyFX"
     bl_label = "Settings"
-    bl_idname = "Settings"
+    bl_idname = "EASYFX_PT_Settings"
     bl_space_type = 'IMAGE_EDITOR'
-    bl_region_type = 'TOOLS'
+    bl_region_type = 'UI'
 
     def draw(self, context):
         scn = context.scene
         mytool = scn.easyfx
         layout = self.layout
         layout.prop(mytool, "layer_index", text="Layer index")
-        layout.operator('object.reset_settings_operator', text = "Reset all values", icon="RECOVER_AUTO")
+        layout.operator('object.reset_settings_operator', text = "Reset all values", icon="RECOVER_LAST")
         #ERROR RECOVER_LAST FILE_REFRESH RECOVER_AUTO
 
 
@@ -441,7 +444,7 @@ class SettingPanel(Panel):
 #   Update
 # ------------------------------------------------------------------------
 
-class UpdateOperator(bpy.types.Operator):
+class EASYFX_OT_UpdateOperator(bpy.types.Operator):
     '''Update'''
     bl_idname = "object.update_operator"
     bl_label = "Update Nodes Operator"
@@ -457,6 +460,7 @@ class UpdateOperator(bpy.types.Operator):
         if editorcheck == False:
             try:
                 bpy.context.area.type='NODE_EDITOR'
+                bpy.context.area.ui_type = "CompositorNodeTree"
                 bpy.ops.screen.area_split(factor=1)
                 bpy.context.area.type='VIEW_3D'
                 bpy.context.area.type='IMAGE_EDITOR'
@@ -475,7 +479,8 @@ class UpdateOperator(bpy.types.Operator):
         ef = bpy.context.scene.easyfx
         # Layer Index
         layeri = ef.layer_index
-        layern = bpy.data.scenes['Scene'].render.layers[layeri].name
+        #layern = bpy.data.scenes['Scene'].render.layers[layeri].name
+        layern = bpy.data.scenes['Scene'].view_layers[layeri].name
         try:
             nodes.remove(nodes['Render Layers'])
             nodes.remove(nodes['Composite'])
@@ -1392,7 +1397,7 @@ class UpdateOperator(bpy.types.Operator):
 
 
 
-class UpdateRenderOperator(bpy.types.Operator):
+class EASYFX_OT_UpdateRenderOperator(bpy.types.Operator):
     '''Update and Re-render'''
     bl_idname = "object.update_render_operator"
     bl_label = "Update and Re-render Operator"
@@ -1401,7 +1406,7 @@ class UpdateRenderOperator(bpy.types.Operator):
         bpy.ops.render.render('INVOKE_DEFAULT')
         return {'FINISHED'}
 
-class ResetSettingsOperator(bpy.types.Operator):
+class EASYFX_OT_ResetSettingsOperator(bpy.types.Operator):
     '''Reset all settings'''
     bl_idname = "object.reset_settings_operator"
     bl_label = "Reset Settings"
@@ -1496,13 +1501,34 @@ class ResetSettingsOperator(bpy.types.Operator):
 #   register and unregister functions
 # ------------------------------------------------------------------------
 
+classes = (
+    MySettings,
+    EASYFX_PT_UpdatePanel,
+    EASYFX_PT_FilterPanel,
+    EASYFX_PT_BlurPanel,
+    EASYFX_PT_ColorPanel,
+    EASYFX_PT_LensPanel,
+    EASYFX_PT_WorldPanel,
+    EASYFX_PT_StylePanel,
+    EASYFX_PT_SettingPanel,
+    EASYFX_OT_UpdateOperator,
+    EASYFX_OT_UpdateRenderOperator,
+    EASYFX_OT_ResetSettingsOperator
+)
+
 def register():
-    bpy.utils.register_module(__name__)
-    bpy.types.Scene.easyfx = PointerProperty(type=MySettings)
+    for cls in classes:
+        register_class(cls)
+
+    bpy.types.Scene.easyfx = bpy.props.PointerProperty(type=MySettings)
+
 
 def unregister():
-    bpy.utils.unregister_module(__name__)
+    for cls in reversed(classes):
+        unregister_class(cls)
+
     del bpy.types.Scene.easyfx
+
 
 if __name__ == "__main__":
     register()
